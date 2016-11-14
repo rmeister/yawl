@@ -42,7 +42,7 @@ Dependencies:
 ### Credits
 
 - Thanks to user 'Madebyoliver' (http://www.flaticon.com/authors/madebyoliver) from flaticon.com for the original 'sun' icon, licensed by "Creative Commons BY 3.0"
-- Thanks @pistolenernie and Ahmad for their feedback on the user interface
+- Thanks to [Lucas](https://github.com/pistolenernie) and Ahmad for their feedback on the user interface
 
 ### License
 WTFPL

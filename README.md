@@ -1,6 +1,6 @@
 # YaWL - Yet another Wake-Up Light
 
-I've always wanted a wake-up light, but the existing ones are either too expensive or setting up the time with physical buttons is annoying. The first light I've built was based on an Arduino and a Bluetooth module. However, updating nativ apps as mobile operating systems evolve is a pain. Thankfully, there is the ESP8266, that has WiFi and can host a small mobile app.
+I've always wanted a wake-up light, but the existing ones are either too expensive or setting up the time with physical buttons is annoying. The first light I've built was based on an Arduino and a Bluetooth module. However, updating native apps as mobile operating systems evolve is a pain. Thankfully, there is the ESP8266, that has WiFi and can host a small mobile app.
 
 ![webapp](app.png)
 
@@ -39,9 +39,10 @@ Dependencies:
 - ProcessScheduler
 
 ----
-### Acknowledgement
+### Credits
 
-Thanks to user 'Madebyoliver' (http://www.flaticon.com/authors/madebyoliver) from flaticon.com for the original 'sun' icon, licensed by "Creative Commons BY 3.0".
+- Thanks to user 'Madebyoliver' (http://www.flaticon.com/authors/madebyoliver) from flaticon.com for the original 'sun' icon, licensed by "Creative Commons BY 3.0"
+- Thanks to Lucas and Ahmad for their feedback on the user interface
 
 ### License
 WTFPL

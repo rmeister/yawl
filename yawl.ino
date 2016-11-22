@@ -1,9 +1,8 @@
 // TODOS
+// - clean up
 // - save important parameters in eeprom
-// - (low prio.) get time from npt or next best http server
-// - add capacitive sensing
-// - test caching
-// - (low prio.) wifi manager
+// - get time from npt or next best http server
+// - wifi manager
 
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -18,72 +17,89 @@
 //#include <AsyncWebSocket.h> // memory leak with this one
 #include <WebSocketsServer.h>
 #include <ProcessScheduler.h>
+#include <CapacitiveSensor.h>
 
+Scheduler sched;
+CapacitiveSensor   cs = CapacitiveSensor(12,14);   // Pin 12 = sender, 14 = reciever
+
+#define PWMSTEPS 1024
 
 // "witty module" LED pinouts
-const int red = 15;
-const int green = 13;
-const int blue = 12;
+#define RED   (15)
+#define GREEN (13)
+#define BLUE  (12)
 
-const int led = red;
+const int LED = RED;
 
 // fill in your WiFi credentials
-const char* ssid = "";
-const char* password = "";
+const char* SSID = "";
+const char* PASS = "";
 
 AsyncWebServer server(80);
 WebSocketsServer ws = WebSocketsServer(81);
 const char index_html[] PROGMEM = "";
 
 boolean daily = false;
-byte value = 0; //current LED brightness
+int value = 0; //current LED brightness
 int timeout = 1200; // seconds
 int duration = 1200; // seconds
 uint8_t alarmID = 0;
 time_t alarmTime = 0; // when brightness reaches max level
 
-int inctime() {
-  return ((float) duration / 256.0) * 1000;
-}
+int inctime() {return ((float) duration / (float) PWMSTEPS) * 1000;}
+
+class FadeOutProcess : public Process {
+  public:
+    FadeOutProcess(Scheduler &manager, ProcPriority pr, unsigned int period, int iterations)
+        : Process(manager, pr, period, iterations) {}
+    static const int STEPS = 6; //PWMSTEPS / 8;
+  protected:
+    virtual void service(){
+      if (value > 0)
+        value >>= 2; //-= 8;
+      if (value < 0)
+        value = 0;
+      analogWrite(LED, value);
+    }
+    virtual void onEnable(){
+      setIterations(STEPS);
+    }
+};
+FadeOutProcess fadeP(sched, HIGH_PRIORITY, 1000/FadeOutProcess::STEPS, 0);
 
 void timeOutCallback(){
   if (value > 0){
-    // TODO: dim instead of abpruptly switching of
-    analogWrite(led, 0);
+    Serial.println("Alarm timed out and value is > 0");
+    fadeP.enable();
   }
 }
 
 class WakeUpProcess : public Process {
   public:
     WakeUpProcess(Scheduler &manager, ProcPriority pr, unsigned int period, int iterations)
-        :  Process(manager, pr, period, iterations) {}
-  
+        :  Process(manager, pr, period, iterations) {} 
   protected:
+    const int STEPS = 1023;
     virtual void service(){
       value++;
-      analogWrite(led, value);
-      int iteration = 256 - getIterations();
+      analogWrite(LED, value);
+      int iteration = STEPS+1  - getIterations();
       Serial.printf("This is the %uth iteration\n", iteration);
-      if (iteration == 255){
+      if (iteration == STEPS){
         Alarm.timerOnce(timeout, timeOutCallback);
       }
     }
+    virtual void onEnable(){
+      Serial.println("wakeP enabled");
+      setPeriod(inctime());
+      setIterations(STEPS);
+    }
 };
-
-
-Scheduler sched;
-WakeUpProcess wakeP(sched, HIGH_PRIORITY, inctime(), 255);
-
+WakeUpProcess wakeP(sched, HIGH_PRIORITY, inctime(), 0);
 
 void alarm() {
   Serial.println("ALARM");
-  
-  analogWrite(led, 255);
-  Alarm.delay(500);
-  analogWrite(led, 0);
-
   wakeP.enable();
-  
   if (!daily) {
     Alarm.disable(Alarm.getTriggeredAlarmId());
     Serial.println("Alarm disabled");
@@ -117,7 +133,6 @@ void decodeSettings(char  payload[]){
   if (root.containsKey("duration")){
     duration = root["duration"];
     updateAlarm(alarmTime);
-    wakeP.setPeriod(inctime());
     Serial.printf("Set duration to %u seconds\n", duration);
   }
   if (root.containsKey("timeout")){
@@ -125,9 +140,10 @@ void decodeSettings(char  payload[]){
     Serial.printf("Set timeout to %u seconds\n", timeout);
   }
   if (root.containsKey("value")){
+    wakeP.disable();
     int val = root["value"];
-    analogWrite(led, val);
-    value = val;
+    value = val<<2;
+    analogWrite(LED, value);
   }
   if (root.containsKey("daily")){
     daily = root["daily"];
@@ -135,7 +151,6 @@ void decodeSettings(char  payload[]){
 }
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght) {
-
     switch(type) {
         case WStype_DISCONNECTED:
             Serial.printf("[%u] Disconnected!\n", num);
@@ -148,7 +163,7 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
                 root["time"] = alarmTime;
                 root["duration"] = duration;
                 root["timeout"] = timeout;
-                root["value"] = value;
+                root["value"] = value>>2;
                 root["daily"] = daily;
                 char buffer[128];
                 root.prettyPrintTo(buffer, sizeof(buffer));
@@ -166,7 +181,6 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
             //hexdump(payload, lenght);
             break;
     }
-
 }
 
 
@@ -174,19 +188,20 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
 
 
 void setup(void){
-  pinMode(red, OUTPUT);
-  pinMode(green, OUTPUT);
-  pinMode(blue, OUTPUT);
-  digitalWrite(led, 0);
+  pinMode(RED, OUTPUT);
+  pinMode(GREEN, OUTPUT);
+  pinMode(BLUE, OUTPUT);
+  digitalWrite(LED, 0);
 
   setTime(SECS_YR_2000);
   alarmID = Alarm.alarmRepeat((time_t) 100, alarm);
   Alarm.disable(alarmID);
 
   wakeP.add();
+  fadeP.add();
   
   Serial.begin(115200);
-  WiFi.begin(ssid, password);
+  WiFi.begin(SSID, PASS);
   Serial.println("");
 
   // Wait for connection
@@ -195,7 +210,7 @@ void setup(void){
     Serial.print(".");
   }
   Serial.print("\nConnected to ");
-  Serial.println(ssid);
+  Serial.println(SSID);
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
@@ -210,7 +225,7 @@ void setup(void){
   ws.onEvent(webSocketEvent);
 
 //server.on("/", HTTP_GET,[](AsyncWebServerRequest *request){ request->send_P(200, "text/html", index_html); });
-  server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
+  server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html").setCacheControl("max-age:600");
   
   server.on("/heap",HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(200, "text/plain", String(ESP.getFreeHeap()));
@@ -267,8 +282,50 @@ void setup(void){
   Serial.println("HTTP server started");
 }
 
+long lastMaximum = 0; 
+
 void loop(void){
   Alarm.delay(10);
   ws.loop();
   sched.run();
+
+  while ((cs.capacitiveSensor(30) > 10) && (value < 1020)) {
+    wakeP.disable();
+    ws.loop();
+    sched.run();
+
+    value++;
+
+    if (value >= 1023) {
+      lastMaximum = millis();
+      // signal max
+      for (int z=0; z<2; z++) {
+        int i = 0;
+        while (i<=120) {
+          i++;
+          value = z ? value+5 : value-5;
+          analogWrite(LED, value);
+          Alarm.delay(5);
+          delay(5);
+        }
+      }
+    }
+    else {
+      analogWrite(LED, value);
+      Alarm.delay(5);
+      delay(5);
+    }
+  }
+
+  delay(1);
+
+  if ((cs.capacitiveSensor(30) > 10) 
+    && (millis() - lastMaximum > 1000) // at least 1 second since reaching max value
+    && (value >= 1020))
+  {
+    fadeP.enable();
+  }
+
+
+
 }

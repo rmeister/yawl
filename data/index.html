@@ -122,7 +122,9 @@ input[type=range]::-webkit-slider-thumb {
     ge('time').value = convBack(obj['time']);
     ge('daily').checked = obj['daily'] == 1 ? true : false;
     ge('duration').value = obj['duration'] /60;
+    ge('dLable').textContent = obj['duration'] /60;
     ge('timeout').value = obj['timeout'] /60;
+    ge('tLable').textContent = obj['timeout'] /60;
     ge('value').value = obj['value'] /5;
   }
   var ws = null;

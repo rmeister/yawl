@@ -121,11 +121,11 @@ input[type=range]::-webkit-slider-thumb {
   function se(obj){
     ge('time').value = convBack(obj['time']);
     ge('daily').checked = obj['daily'] == 1 ? true : false;
-    ge('duration').value = obj['duration'] /60;
-    ge('dLable').textContent = obj['duration'] /60;
-    ge('timeout').value = obj['timeout'] /60;
-    ge('tLable').textContent = obj['timeout'] /60;
-    ge('value').value = obj['value'] /5;
+    ge('duration').value = obj['duration'] / 60;
+    ge('dLable').textContent = obj['duration'] / 60;
+    ge('timeout').value = obj['timeout'] / 60;
+    ge('tLable').textContent = obj['timeout'] / 60;
+    ge('value').value = obj['value'] / 4;
   }
   var ws = null;
 
@@ -241,11 +241,11 @@ input[type=range]::-webkit-slider-thumb {
   </p>
 
 	<div id="wrSettings">
-    Duration: <span id="dLable">20</span> min<br><input type="range" oninput="send('duration', this.value *60); ge('dLable').textContent = this.value;" id="duration" min="1" max="30" value="20"> <br>
-    <br>Timeout: <span id="tLable">20</span> min<br><input type="range" oninput="send('timeout', this.value *60); ge('tLable').textContent = this.value;" id="timeout" min="0" max="60" value="20">
+    Duration: <span id="dLable">20</span> min<br><input type="range" onchange="send('duration', this.value *60); ge('dLable').textContent = this.value;" id="duration" min="1" max="30" value="20"> <br>
+    <br>Timeout: <span id="tLable">20</span> min<br><input type="range" onchange="send('timeout', this.value *60); ge('tLable').textContent = this.value;" id="timeout" min="0" max="60" value="20">
   </div>
 	
-  <div class="slider"><input type="range" oninput="send('value', this.value * 5)" id="value" min="0" max="51">
+  <div class="slider"><input type="range" oninput="send('value', this.value * 4)" id="value" min="0" max="64">
 	</div>
 </body>
 </html>

@@ -32,9 +32,11 @@ Basically an Arduino sketch, that serves a single page app. Sketch and app commu
 Dependencies:
 
 - [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer)
+- [arduinoWebSockets](https://github.com/Links2004/arduinoWebSockets)
 - [ArduinoJson](https://github.com/bblanchon/ArduinoJson)
 - [Time](https://github.com/PaulStoffregen/Time)
 - [TimeAlarms](https://github.com/PaulStoffregen/TimeAlarms)
+- [CapacitiveSensor](https://github.com/PaulStoffregen/CapacitiveSensor)
 - [ProcessScheduler](https://github.com/wizard97/ArduinoProcessScheduler)
 
 ----

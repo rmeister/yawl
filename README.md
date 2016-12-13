@@ -7,17 +7,18 @@ I've always wanted a wake-up light, but the existing ones are either too expensi
 Features:
 
 - A web app that looks kind of native if placed on the start screen
-- Setting the time you wish to wake up
-- Setting the period it takes to get from zero to full brightness
-- Setting a timeout to switch the light off after the alarm time
-- Repeated mode: wake up at the same time every day without changing settings
-- Slider to directly set the brightness for use during the day 
+	- Set the time you wish to wake up
+	- Set the period it takes to get from zero to full brightness
+	- Set a timeout to switch the light off after the alarm time
+	- Repeated mode: wake up at the same time every day without changing settings
+	- Directly control brightness in 64 steps, e.g. for use as bedside lamp at night 
+- Capacitive sensing: adjust brightness by touching conducting parts of the lamp
+- Settings are stored to EEPROM and thus survive restarts
 
 Planned:
 
-- Store parameters to EEPROM and get current time from the internet, so the settings survive a restart
-- Capacitive sensing: adjust brightness by touching the lamp
-- WiFi-Management: easy entering of WiFi credentials
+- Fetch the current time from the web after restarts
+- Eventually, WiFi-Management: set up WiFi credentials in a captive portal 
 
 
 ### Hardware
@@ -27,7 +28,7 @@ Planned:
 
 ### Software
 
-Basically an Arduino sketch, that serves a single page app. Sketch and app communicate via Websockets. 
+Basically an Arduino sketch, that serves a single page app. Sketch and app communicate via WebSocket. 
 
 Dependencies:
 
